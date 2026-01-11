@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="pt-br" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AD Ide e Pregai - Assembleia de Deus</title>
+    
+    <!-- Frameworks e Fontes -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #ffffff;
+            color: #050a18;
+            margin: 0;
+        }
+        h1, h2, h3, h4, .font-serif {
+            font-family: 'Playfair Display', serif;
+        }
+        
+        /* Modais e Menus */
+        #liveModal, #mobileMenu {
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        #liveModal.active, #mobileMenu.active {
+            display: flex !important;
+            opacity: 1;
+        }
+
+        .card-premium {
+            background: #ffffff;
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .card-premium:hover {
+            border-color: #d4af37;
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px -20px rgba(212, 175, 55, 0.2);
+        }
+
+        /* Efeito de carregamento no rádio */
+        .loading-radio {
+            animation: pulse-gold 1.5s infinite;
+        }
+        @keyframes pulse-gold {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        @keyframes subtleZoom {
+            from { transform: scale(1); }
+            to { transform: scale(1.05); }
+        }
+        .animate-subtle-zoom { animation: subtleZoom 20s infinite alternate linear; }
+    </style>
+</head>
+<body class="antialiased selection:bg-[#d4af37]/30">
+
+    <!-- BARRA DE RÁDIO (Corrigida) -->
+    <header class="bg-[#d4af37] text-black h-12 fixed top-0 w-full z-[150] shadow-md flex justify-between items-center px-4 md:px-12">
+        <div class="flex items-center gap-2">
+            <span class="relative flex h-3 w-3">
+                <span id="radioStatusPing" class="absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-3 w-3 bg-white"></span>
+            </span>
+            <div class="flex flex-col">
+                <span class="text-[9px] font-black uppercase tracking-[0.2em] leading-none">Ao Vivo</span>
+                <span class="text-[10px] font-bold uppercase tracking-widest leading-none">Gospel FM 89.3</span>
+            </div>
+        </div>
+        
+        <div class="flex items-center gap-4">
+            <!-- Audio Tag com Stream Direto -->
+            <audio id="radioPlayer" preload="none" crossorigin="anonymous">
+                <source src="https://streaming19.hstbr.net:8100/live" type="audio/mpeg">
+                Seu navegador não suporta áudio online.
+            </audio>
+            
+            <button onclick="toggleRadio()" id="radioBtn" class="flex items-center gap-3 bg-black/10 px-4 py-1.5 rounded-full hover:bg-black/20 transition-all group">
+                <i data-lucide="play" class="w-4 h-4 fill-black" id="radioIcon"></i>
+                <span id="radioText" class="text-[10px] font-black uppercase tracking-widest">Ouvir Rádio</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- NAVEGAÇÃO PRINCIPAL -->
+    <nav id="mainNav" class="fixed w-full z-[140] top-12 transition-all duration-500 px-6 lg:px-16 bg-white/90 backdrop-blur-md border-b border-black/5">
+        <div class="max-w-7xl mx-auto flex justify-between items-center py-5">
+            <a href="#home" class="text-xl md:text-2xl font-black text-slate-900 tracking-tighter uppercase">
+                AD <span class="text-[#d4af37]">Ide e Pregai</span>
+            </a>
+            
+            <div class="hidden lg:flex items-center space-x-10 text-[10px] font-black uppercase tracking-[0.2em]">
+                <a href="#home" class="hover:text-[#d4af37] transition-colors">Início</a>
+                <a href="#agenda" class="hover:text-[#d4af37] transition-colors">Agenda</a>
+                <a href="#pastor" class="hover:text-[#d4af37] transition-colors">Pastor</a>
+                <button onclick="openLiveModal()" class="flex items-center gap-2 text-red-600 font-black">
+                    <span class="w-2 h-2 bg-red-600 rounded-full animate-pulse"></span> Ao Vivo
+                </button>
+                <a href="#contato" class="bg-slate-900 text-white px-6 py-2 rounded-full hover:bg-[#d4af37] hover:text-black transition-all">Contato</a>
+            </div>
+
+            <button onclick="toggleMobileMenu()" class="lg:hidden text-slate-900">
+                <i data-lucide="menu"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- MENU MOBILE -->
+    <div id="mobileMenu" class="fixed inset-0 z-[160] bg-white flex-col p-10 hidden">
+        <div class="flex justify-between items-center mb-16">
+            <span class="text-[#d4af37] font-bold tracking-widest text-sm uppercase font-black">Menu</span>
+            <button onclick="toggleMobileMenu()" class="text-slate-900"><i data-lucide="x"></i></button>
+        </div>
+        <div class="flex flex-col gap-8 text-3xl font-serif text-slate-900">
+            <a href="#home" onclick="toggleMobileMenu()">Início</a>
+            <a href="#agenda" onclick="toggleMobileMenu()">Agenda</a>
+            <a href="#pastor" onclick="toggleMobileMenu()">Liderança</a>
+            <button onclick="openLiveModal(); toggleMobileMenu()" class="text-left text-red-600 font-bold">Assistir Culto</button>
+            <a href="#contato" onclick="toggleMobileMenu()" class="text-[#d4af37]">Localização</a>
+        </div>
+    </div>
+
+    <!-- HERO SECTION -->
+    <header id="home" class="relative min-h-screen flex items-center justify-center pt-24 overflow-hidden bg-slate-50">
+        <div class="absolute inset-0 z-0">
+            <img src="https://images.unsplash.com/photo-1544427920-c49ccfb85579?auto=format&fit=crop&q=80&w=2000" 
+                 class="w-full h-full object-cover animate-subtle-zoom opacity-20" alt="Igreja Interior">
+        </div>
+        <div class="relative z-10 max-w-5xl mx-auto px-6 text-center">
+            <span class="inline-block px-4 py-1 border border-[#d4af37]/30 rounded-full mb-6 bg-white/50 backdrop-blur-md">
+                <p class="text-[#d4af37] tracking-[0.5em] uppercase text-[9px] font-black">Assembléia de Deus Ide e Pregai</p>
+            </span>
+            <h1 class="text-5xl md:text-8xl font-black text-slate-900 mb-8 leading-tight tracking-tighter">
+                IDE E <span class="text-[#d4af37]">PREGAI</span>
+            </h1>
+            <p class="text-slate-600 text-lg md:text-2xl font-light mb-12 max-w-3xl mx-auto italic font-serif">
+                "Ide por todo o mundo e pregai o evangelho a toda criatura."
+            </p>
+            <div class="flex flex-col md:flex-row gap-5 justify-center">
+                <button onclick="openLiveModal()" class="bg-[#d4af37] text-black px-12 py-4 rounded-full font-black text-xs uppercase tracking-widest shadow-xl hover:scale-105 transition-all">
+                    Assistir Culto Online
+                </button>
+                <a href="#agenda" class="bg-white border border-slate-200 text-slate-900 px-12 py-4 rounded-full font-black text-xs uppercase tracking-widest hover:border-[#d4af37] transition-all">
+                    Horários de Culto
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- AGENDA SECTION -->
+    <section id="agenda" class="py-32 px-6 bg-white">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-24">
+                <h2 class="text-[#d4af37] text-xs font-black uppercase tracking-[0.5em] mb-4">Agenda</h2>
+                <h3 class="text-5xl font-bold text-slate-900">Nossa Programação</h3>
+            </div>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+                <!-- Domingo -->
+                <div class="card-premium p-10 rounded-[2rem] text-center">
+                    <div class="w-12 h-12 bg-[#d4af37]/10 rounded-2xl flex items-center justify-center mx-auto mb-8 text-[#d4af37]">
+                        <i data-lucide="book-open" class="w-6 h-6"></i>
+                    </div>
+                    <h4 class="text-[#d4af37] text-[10px] font-black uppercase mb-2">Domingo Manhã</h4>
+                    <h5 class="text-2xl font-bold mb-4 italic">Escola Dominical</h5>
+                    <p class="text-slate-900 font-black text-sm">08:00 às 10:00</p>
+                </div>
+
+                <div class="card-premium p-10 rounded-[2rem] text-center border-t-4 border-t-[#d4af37]/50">
+                    <div class="w-12 h-12 bg-red-50 rounded-2xl flex items-center justify-center mx-auto mb-8 text-red-600">
+                        <i data-lucide="users" class="w-6 h-6"></i>
+                    </div>
+                    <h4 class="text-[#d4af37] text-[10px] font-black uppercase mb-2">Domingo Noite</h4>
+                    <h5 class="text-2xl font-bold mb-4 italic">Culto da Família</h5>
+                    <p class="text-slate-900 font-black text-sm">Às 19:00</p>
+                </div>
+
+                <!-- Terça -->
+                <div class="card-premium p-10 rounded-[2rem] text-center">
+                    <div class="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto mb-8 text-blue-600">
+                        <i data-lucide="graduation-cap" class="w-6 h-6"></i>
+                    </div>
+                    <h4 class="text-[#d4af37] text-[10px] font-black uppercase mb-2">Terça-Feira</h4>
+                    <h5 class="text-2xl font-bold mb-4 italic">Culto de Ensinamento</h5>
+                    <p class="text-slate-900 font-black text-sm">Às 19:00</p>
+                </div>
+
+                <!-- Quinta -->
+                <div class="card-premium p-10 rounded-[2rem] text-center">
+                    <div class="w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center mx-auto mb-8 text-amber-600">
+                        <i data-lucide="flame" class="w-6 h-6"></i>
+                    </div>
+                    <h4 class="text-[#d4af37] text-[10px] font-black uppercase mb-2">Quinta-Feira</h4>
+                    <h5 class="text-2xl font-bold mb-4 italic">Culto de Adoração</h5>
+                    <p class="text-slate-900 font-black text-sm">Às 19:00</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- LIDERANÇA -->
+    <section id="pastor" class="py-32 px-6 bg-slate-50">
+        <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center gap-20">
+            <div class="w-full md:w-1/2 aspect-[4/5] bg-white rounded-[3rem] overflow-hidden border border-slate-200 shadow-2xl relative group">
+                <img src="pastor.jpg" onerror="this.src='https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=1000'" 
+                     class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="Pastor Oseas Andrade">
+                <div class="absolute bottom-0 p-12 bg-gradient-to-t from-white via-white/80 to-transparent w-full text-center">
+                    <p class="text-[#d4af37] text-xs font-black uppercase tracking-[0.3em] mb-2">Pastor Presidente</p>
+                    <h4 class="text-3xl font-bold text-slate-900">Oseas Andrade</h4>
+                </div>
+            </div>
+            <div class="w-full md:w-1/2">
+                <h2 class="text-[#d4af37] text-xs font-black uppercase tracking-[0.5em] mb-4">Liderança</h2>
+                <h3 class="text-5xl font-bold text-slate-900 mb-8">Pr. Oseas Andrade</h3>
+                <p class="text-slate-600 text-xl font-light leading-relaxed mb-8 italic font-serif italic">
+                    "Nossa missão é preparar um povo para o encontro com o Senhor, fundamentados no amor e na sã doutrina."
+                </p>
+                <div class="h-px w-24 bg-[#d4af37]"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- MODAL LIVE -->
+    <div id="liveModal" class="fixed inset-0 z-[250] items-center justify-center p-4 md:p-8 bg-black/90 backdrop-blur-xl">
+        <div class="bg-white w-full max-w-5xl rounded-[2rem] overflow-hidden shadow-2xl relative">
+            <div class="p-4 flex justify-between items-center bg-slate-50 border-b border-slate-100">
+                <div class="flex items-center gap-3">
+                    <div class="bg-red-600 px-3 py-1 rounded-full text-[9px] text-white font-black uppercase flex items-center gap-2">
+                        <span class="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></span> Transmitindo
+                    </div>
+                    <span class="text-slate-900 font-bold text-xs uppercase tracking-widest">Canal Oficial AD Ide e Pregai</span>
+                </div>
+                <button onclick="closeLiveModal()" class="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-red-500 transition-all">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <div class="aspect-video bg-black">
+                <iframe id="youtubePlayer" class="w-full h-full" src="" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+            </div>
+            <div class="p-10 text-center bg-white">
+                <p class="text-2xl font-serif italic text-slate-900">"Pois onde estiverem dois ou três reunidos em meu nome, ali eu estou no meio deles."</p>
+                <p class="text-[9px] font-black uppercase mt-4 text-[#d4af37]">Mateus 18:20</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer id="contato" class="bg-[#050a18] pt-24 pb-12 px-6 text-white text-center">
+        <div class="max-w-7xl mx-auto">
+            <h4 class="text-2xl font-black mb-8 tracking-tighter uppercase">AD <span class="text-[#d4af37]">Ide e Pregai</span></h4>
+            <div class="grid md:grid-cols-3 gap-12 mb-16 text-sm text-slate-400 uppercase tracking-widest font-bold">
+                <div>
+                    <i data-lucide="map-pin" class="w-5 h-5 mx-auto mb-4 text-[#d4af37]"></i>
+                    <p>Localização Central</p>
+                </div>
+                <div>
+                    <i data-lucide="phone" class="w-5 h-5 mx-auto mb-4 text-[#d4af37]"></i>
+                    <p>Fale Conosco</p>
+                </div>
+                <div>
+                    <i data-lucide="instagram" class="w-5 h-5 mx-auto mb-4 text-[#d4af37]"></i>
+                    <p>Siga-nos Online</p>
+                </div>
+            </div>
+            <div class="border-t border-white/5 pt-12">
+                <p class="text-[9px] text-slate-500 font-black uppercase tracking-[0.3em]">
+                    © 2024 Assembléia de Deus Ide e Pregai • Pastor Presidente Oseas Andrade
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        lucide.createIcons();
+
+        // Variáveis de Controle
+        const radioPlayer = document.getElementById('radioPlayer');
+        const radioIcon = document.getElementById('radioIcon');
+        const radioText = document.getElementById('radioText');
+        const radioBtn = document.getElementById('radioBtn');
+        const radioStatusPing = document.getElementById('radioStatusPing');
+        
+        let isRadioPlaying = false;
+
+        // Função de Rádio (Corrigida e Reforçada)
+        function toggleRadio() {
+            if (!isRadioPlaying) {
+                // Iniciar Reprodução
+                radioText.innerText = "Conectando...";
+                radioBtn.classList.add('loading-radio');
+                
+                radioPlayer.play().then(() => {
+                    isRadioPlaying = true;
+                    radioIcon.setAttribute('data-lucide', 'pause');
+                    radioText.innerText = "No Ar";
+                    radioBtn.classList.remove('loading-radio');
+                    radioBtn.classList.add('bg-[#d4af37]', 'text-black');
+                    radioStatusPing.classList.add('animate-ping');
+                    lucide.createIcons();
+                }).catch(error => {
+                    console.error("Erro ao tocar rádio:", error);
+                    radioText.innerText = "Erro no Stream";
+                    radioBtn.classList.remove('loading-radio');
+                    setTimeout(() => {
+                        radioText.innerText = "Ouvir Rádio";
+                    }, 2000);
+                });
+            } else {
+                // Pausar
+                radioPlayer.pause();
+                isRadioPlaying = false;
+                radioIcon.setAttribute('data-lucide', 'play');
+                radioText.innerText = "Ouvir Rádio";
+                radioBtn.classList.remove('bg-[#d4af37]', 'text-black');
+                radioStatusPing.classList.remove('animate-ping');
+                lucide.createIcons();
+            }
+        }
+
+        // Modal YouTube
+        const liveModal = document.getElementById('liveModal');
+        const ytPlayer = document.getElementById('youtubePlayer');
+        const YOUTUBE_URL = "https://www.youtube.com/embed/live_stream?channel=UC4_r96A-T9oDpxKz52-l8YQ&autoplay=1&modestbranding=1&rel=0";
+
+        function openLiveModal() {
+            liveModal.classList.add('active');
+            ytPlayer.src = YOUTUBE_URL;
+            document.body.style.overflow = 'hidden';
+            if (isRadioPlaying) toggleRadio(); // Pausa rádio ao abrir vídeo
+        }
+
+        function closeLiveModal() {
+            liveModal.classList.remove('active');
+            ytPlayer.src = "";
+            document.body.style.overflow = 'auto';
+        }
+
+        // Mobile Menu
+        const mobileMenu = document.getElementById('mobileMenu');
+        function toggleMobileMenu() {
+            mobileMenu.classList.toggle('active');
+        }
+
+        // Scroll Logic
+        const mainNav = document.getElementById('mainNav');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 50) {
+                mainNav.classList.add('shadow-xl', 'top-0');
+                mainNav.classList.remove('top-12');
+            } else {
+                mainNav.classList.remove('shadow-xl', 'top-0');
+                mainNav.classList.add('top-12');
+            }
+        });
+
+        // Fechar modal ao clicar fora
+        window.onclick = (e) => {
+            if (e.target === liveModal) closeLiveModal();
+        };
+    </script>
+</body>
+</html>
